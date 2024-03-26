@@ -20,7 +20,7 @@ with st.sidebar:
 
 # st.cache_resoure is for: 
 
-@st.cache_resource
+@st.cache_data
 def data_processing():
 
     # loading the data and preparing it
@@ -42,7 +42,7 @@ def data_processing():
     return games
 
 
-@st.cache_resource
+#@st.cache_resource
 def calculate_similarities(name, data_original, data_filtered):
 
     # subsetting 5 years - this will be the one searched - could add functionality
@@ -90,7 +90,7 @@ def calculate_similarities(name, data_original, data_filtered):
 
 
 # App # 
-st.cache_data
+#st.cache_data
 games = data_processing()
 
 option = st.selectbox(
