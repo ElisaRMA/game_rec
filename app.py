@@ -2,7 +2,13 @@ import streamlit as st
 import pandas as pd
 import re
 from datetime import datetime
-from FlagEmbedding import BGEM3FlagModel
+#from FlagEmbedding import BGEM3FlagModel
+# Use a pipeline as a high-level helper
+from transformers import pipeline
+from transformers import AutoTokenizer, AutoModel
+import torch
+import torch.nn.functional as F
+from sentence_transformers import SentenceTransformer, util
 
 st.set_page_config(layout="wide")
 
@@ -64,20 +70,17 @@ def calculate_similarities(name, data_original, data_filtered):
     # run the model
 
 
-    model = BGEM3FlagModel('BAAI/bge-m3',
-                            use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
-    embeddings_1 = model.encode(summary_selected_game,
-                                batch_size=12,
-                                max_length=max([len(i) for i in summaries_all_games]), # If you don't need such a long length, you can set a smaller value to speed up the encoding process.
-                                )['dense_vecs']
+    #Compute embedding for both lists
+    embedding_1= model.encode(summary_selected_game, convert_to_tensor=True)
+    embedding_2 = model.encode(summaries_all_games, convert_to_tensor=True)
 
-    embeddings_2 = model.encode(summaries_all_games)['dense_vecs']
+    similarity = util.pytorch_cos_sim(embedding_1, embedding_2)
 
-    similarity = embeddings_1 @ embeddings_2.T
-
+    
     # place it back in the dataset
-    games_filtered.loc[:,'similarity'] = similarity
+    games_filtered.loc[:,'similarity'] = similarity[0].tolist()
 
     games_filtered['summary_fixed'] = games_filtered.Summary.str.replace(r'[\n\s]{2,}', ' ', regex=True)
 
